@@ -1,73 +1,121 @@
 
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>スマホ対応シューティング</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shooting Game</title>
   <style>
     body {
       margin: 0;
-      background: #000;
+      background: #111;
       overflow: hidden;
     }
     canvas {
       display: block;
-      background: #111;
-      touch-action: none;
+      margin: 0 auto;
+      background: #222;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      color: white;
+      font-family: sans-serif;
+      font-size: 20px;
     }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas"></canvas>
+  <div id="score">Score: 0</div>
+  <canvas id="gameCanvas" width="400" height="600"></canvas>
 
   <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-
-    // キャンバスを全画面に
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('score');
 
     const player = {
-      x: canvas.width / 2,
-      y: canvas.height - 60,
-      size: 30,
-      color: "lime"
+      x: canvas.width / 2 - 10,
+      y: canvas.height - 40,
+      width: 20,
+      height: 20,
+      color: 'lime',
+      speed: 5
     };
 
-    let bullets = [];
+    const bullets = [];
+    const enemies = [];
+    let score = 0;
 
-    // タップで弾を発射
-    document.addEventListener("touchstart", (e) => {
-      bullets.push({ x: player.x, y: player.y });
+    document.addEventListener('touchstart', () => {
+      bullets.push({
+        x: player.x + player.width / 2 - 2,
+        y: player.y,
+        width: 4,
+        height: 10,
+        speed: 7
+      });
     });
 
-    // スワイプで移動（タップ位置に移動）
-    document.addEventListener("touchmove", (e) => {
-      const touch = e.touches[0];
-      player.x = touch.clientX;
+    document.addEventListener('touchmove', (e) => {
+      const touchX = e.touches[0].clientX;
+      player.x = touchX - canvas.getBoundingClientRect().left - player.width / 2;
     });
+
+    function spawnEnemy() {
+      const size = 20;
+      const x = Math.random() * (canvas.width - size);
+      enemies.push({ x, y: -size, width: size, height: size, speed: 2 });
+    }
 
     function update() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      // 自機
-      ctx.fillStyle = player.color;
-      ctx.fillRect(player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
-
-      // 弾
-      ctx.fillStyle = "white";
       bullets.forEach((b, i) => {
-        b.y -= 5;
-        ctx.fillRect(b.x - 2, b.y, 4, 10);
+        b.y -= b.speed;
         if (b.y < 0) bullets.splice(i, 1);
       });
 
-      requestAnimationFrame(update);
+      enemies.forEach((e, ei) => {
+        e.y += e.speed;
+        if (e.y > canvas.height) enemies.splice(ei, 1);
+
+        bullets.forEach((b, bi) => {
+          if (b.x < e.x + e.width && b.x + b.width > e.x &&
+              b.y < e.y + e.height && b.y + b.height > e.y) {
+            enemies.splice(ei, 1);
+            bullets.splice(bi, 1);
+            score += 100;
+            scoreEl.textContent = 'Score: ' + score;
+          }
+        });
+      });
     }
 
-    update();
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x, player.y, player.width, player.height);
+
+      ctx.fillStyle = 'white';
+      bullets.forEach(b => {
+        ctx.fillRect(b.x, b.y, b.width, b.height);
+      });
+
+      ctx.fillStyle = 'red';
+      enemies.forEach(e => {
+        ctx.fillRect(e.x, e.y, e.width, e.height);
+      });
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    setInterval(spawnEnemy, 1000);
+    loop();
   </script>
 </body>
 </html>
