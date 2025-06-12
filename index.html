@@ -3,44 +3,71 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>ベクトルで動くキャラ</title>
+  <title>スマホ対応シューティング</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    body { margin: 0; overflow: hidden; background: #111; }
-    canvas { display: block; margin: 0 auto; background: #222; }
+    body {
+      margin: 0;
+      background: #000;
+      overflow: hidden;
+    }
+    canvas {
+      display: block;
+      background: #111;
+      touch-action: none;
+    }
   </style>
 </head>
 <body>
-  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <canvas id="gameCanvas"></canvas>
+
   <script>
     const canvas = document.getElementById("gameCanvas");
     const ctx = canvas.getContext("2d");
 
-    let pos = { x: 200, y: 200 };
-    let vel = { x: 0, y: 0 };
+    // キャンバスを全画面に
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
 
-    document.addEventListener("keydown", e => {
-      const speed = 2;
-      if (e.key === "ArrowUp") vel.y = -speed;
-      else if (e.key === "ArrowDown") vel.y = speed;
-      else if (e.key === "ArrowLeft") vel.x = -speed;
-      else if (e.key === "ArrowRight") vel.x = speed;
+    const player = {
+      x: canvas.width / 2,
+      y: canvas.height - 60,
+      size: 30,
+      color: "lime"
+    };
+
+    let bullets = [];
+
+    // タップで弾を発射
+    document.addEventListener("touchstart", (e) => {
+      bullets.push({ x: player.x, y: player.y });
     });
 
-    document.addEventListener("keyup", e => {
-      if (["ArrowUp", "ArrowDown"].includes(e.key)) vel.y = 0;
-      if (["ArrowLeft", "ArrowRight"].includes(e.key)) vel.x = 0;
+    // スワイプで移動（タップ位置に移動）
+    document.addEventListener("touchmove", (e) => {
+      const touch = e.touches[0];
+      player.x = touch.clientX;
     });
 
-    function draw() {
+    function update() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      pos.x += vel.x;
-      pos.y += vel.y;
-      ctx.fillStyle = "lime";
-      ctx.fillRect(pos.x, pos.y, 20, 20);
-      requestAnimationFrame(draw);
+
+      // 自機
+      ctx.fillStyle = player.color;
+      ctx.fillRect(player.x - player.size / 2, player.y - player.size / 2, player.size, player.size);
+
+      // 弾
+      ctx.fillStyle = "white";
+      bullets.forEach((b, i) => {
+        b.y -= 5;
+        ctx.fillRect(b.x - 2, b.y, 4, 10);
+        if (b.y < 0) bullets.splice(i, 1);
+      });
+
+      requestAnimationFrame(update);
     }
 
-    draw();
+    update();
   </script>
 </body>
 </html>
