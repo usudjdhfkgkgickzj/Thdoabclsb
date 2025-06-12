@@ -1,0 +1,46 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>ベクトルで動くキャラ</title>
+  <style>
+    body { margin: 0; overflow: hidden; background: #111; }
+    canvas { display: block; margin: 0 auto; background: #222; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let pos = { x: 200, y: 200 };
+    let vel = { x: 0, y: 0 };
+
+    document.addEventListener("keydown", e => {
+      const speed = 2;
+      if (e.key === "ArrowUp") vel.y = -speed;
+      else if (e.key === "ArrowDown") vel.y = speed;
+      else if (e.key === "ArrowLeft") vel.x = -speed;
+      else if (e.key === "ArrowRight") vel.x = speed;
+    });
+
+    document.addEventListener("keyup", e => {
+      if (["ArrowUp", "ArrowDown"].includes(e.key)) vel.y = 0;
+      if (["ArrowLeft", "ArrowRight"].includes(e.key)) vel.x = 0;
+    });
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pos.x += vel.x;
+      pos.y += vel.y;
+      ctx.fillStyle = "lime";
+      ctx.fillRect(pos.x, pos.y, 20, 20);
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html>
